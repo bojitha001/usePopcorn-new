@@ -12,6 +12,7 @@ import MovieList from "./components/MovieList";
 import WatchedSummary from "./components/WatchedSummary";
 import WatchedMovieList from "./components/WatchedMovieList";
 import Loader from "./components/Loader";
+import MovieDetails from "./components/MovieDetails";
 
 const tempMovieData = [
   {
@@ -68,50 +69,78 @@ export default function App() {
   const [watched, setWatched] = useState(tempWatchedData);
   const [isLoading, setIsLoading] = useState(false);
   // const tempQuery = "interstellar"
+  const [selectedId, setSelectedId] = useState(null);
 
-  
+  function handleSelectedMovie(id) {
+    setSelectedId((selectedId) => (id === selectedId ? null : id));
+  }
 
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-        );
+  function handleCloseMovie() {
+    setSelectedId(null);
+  }
 
-        if (!res.ok)
-          throw new Error("Something went wrong when fetching movie");
-        
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+          );
 
-        const data = await res.json();
-        if(data.Response === "False") throw new Error("Movie not found")
-        setMovies(data.Search);
-        
-      } catch (err) {
-        console.error(err.message);
-      } finally {
-        setIsLoading(false);
+          if (!res.ok)
+            throw new Error("Something went wrong when fetching movie");
+
+          const data = await res.json();
+          if (data.Response === "False") throw new Error("Movie not found");
+          setMovies(data.Search);
+        } catch (err) {
+          console.error(err.message);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    }
 
-    fetchMovies();
-  }, [query]);
+      if (query.length < 3) {
+        setMovies([]);
+        return;
+      }
+
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <NavBar>
         <Logo />
-        <Search query = {query} setQuery={setQuery}/>
+        <Search query={query} setQuery={setQuery} />
         <NumResult movies={movies} />
       </NavBar>
 
       <Main>
-        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
+        <Box>
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <MovieList movies={movies} onSelectMovie={handleSelectedMovie} />
+          )}
+        </Box>
 
         <Box>
           <>
-            <WatchedSummary watched={watched} />
-            <WatchedMovieList watched={watched} />
+            {selectedId ? (
+              <MovieDetails
+                selectedId={selectedId}
+                onCloseMovie={handleCloseMovie}
+              />
+            ) : (
+              <>
+                <WatchedSummary watched={watched} />
+                <WatchedMovieList watched={watched} />
+              </>
+            )}
           </>
         </Box>
       </Main>
