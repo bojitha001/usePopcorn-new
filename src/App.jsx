@@ -66,7 +66,7 @@ const KEY = "cc1b7c7";
 export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   // const tempQuery = "interstellar"
   const [selectedId, setSelectedId] = useState(null);
@@ -79,13 +79,24 @@ export default function App() {
     setSelectedId(null);
   }
 
+  function handleAddWatched(movie) {
+    setWatched(watched => [...watched, movie])
+    
+  }
+
+  function handleDeleteWatched(id) {
+    setWatched(watched => watched.filter(movie => movie.imdbID !== id))
+  }
+
   useEffect(
     function () {
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`, {signal: controller.signal}
           );
 
           if (!res.ok)
@@ -107,6 +118,10 @@ export default function App() {
       }
 
       fetchMovies();
+
+      return function() {
+        controller.abort();
+      }
     },
     [query]
   );
@@ -134,11 +149,13 @@ export default function App() {
               <MovieDetails
                 selectedId={selectedId}
                 onCloseMovie={handleCloseMovie}
+                onAddWatched = {handleAddWatched}
+                watched =  {watched}
               />
             ) : (
               <>
                 <WatchedSummary watched={watched} />
-                <WatchedMovieList watched={watched} />
+                <WatchedMovieList watched={watched} handleDeleteWatched={handleDeleteWatched}/>
               </>
             )}
           </>
