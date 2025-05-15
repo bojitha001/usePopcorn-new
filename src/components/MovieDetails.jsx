@@ -28,7 +28,8 @@ const MovieDetails = ({ selectedId, onCloseMovie, onAddWatched, watched }) => {
     Genre: genre,
   } = movie;
 
-  console.log(title, year);
+  // console.log(title, year);
+  
 
   function handleAdd() {
     const newWatchedMovie = {
@@ -42,8 +43,26 @@ const MovieDetails = ({ selectedId, onCloseMovie, onAddWatched, watched }) => {
     };
 
     onAddWatched(newWatchedMovie);
-    onCloseMovie();
+    // onCloseMovie();
   }
+
+  useEffect(
+    function () {
+
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
 
   useEffect(
     function () {
@@ -64,12 +83,12 @@ const MovieDetails = ({ selectedId, onCloseMovie, onAddWatched, watched }) => {
 
   useEffect(
     function () {
-      if(!title) return;
+      if (!title) return;
       document.title = `Movie | ${title}`;
 
-      return function() {
-        document.title = "usePopcorn"
-      }
+      return function () {
+        document.title = "usePopcorn";
+      };
     },
     [title]
   );

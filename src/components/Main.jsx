@@ -5,7 +5,7 @@ import WatchedBox from './WatchedBox';
 
 
 
-const Main = ({children}) => {
+const Main = ({children}) => { 
   
   return (
     <main className="main">

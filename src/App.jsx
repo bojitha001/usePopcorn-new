@@ -66,11 +66,17 @@ const KEY = "cc1b7c7";
 export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   // const tempQuery = "interstellar"
   const [selectedId, setSelectedId] = useState(null);
+  // const [watched, setWatched] = useState([]);
 
+  // get the movies that watched from the local storage
+  const [watched, setWatched] = useState(function() {
+    const storedValue = localStorage.getItem("watched");
+    return JSON.parse(storedValue)
+  });
+  
   function handleSelectedMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
   }
@@ -80,13 +86,20 @@ export default function App() {
   }
 
   function handleAddWatched(movie) {
-    setWatched(watched => [...watched, movie])
-    
+    setWatched((watched) => [...watched, movie]);
+    // localStorage.setItem('watched', JSON.stringify([...watched, movie]))
   }
 
   function handleDeleteWatched(id) {
-    setWatched(watched => watched.filter(movie => movie.imdbID !== id))
+    setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
+
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
 
   useEffect(
     function () {
@@ -96,7 +109,8 @@ export default function App() {
         try {
           setIsLoading(true);
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`, {signal: controller.signal}
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+            { signal: controller.signal }
           );
 
           if (!res.ok)
@@ -116,12 +130,13 @@ export default function App() {
         setMovies([]);
         return;
       }
-
+      2;
+      handleCloseMovie();
       fetchMovies();
 
-      return function() {
+      return function () {
         controller.abort();
-      }
+      };
     },
     [query]
   );
@@ -149,13 +164,16 @@ export default function App() {
               <MovieDetails
                 selectedId={selectedId}
                 onCloseMovie={handleCloseMovie}
-                onAddWatched = {handleAddWatched}
-                watched =  {watched}
+                onAddWatched={handleAddWatched}
+                watched={watched}
               />
             ) : (
               <>
                 <WatchedSummary watched={watched} />
-                <WatchedMovieList watched={watched} handleDeleteWatched={handleDeleteWatched}/>
+                <WatchedMovieList
+                  watched={watched}
+                  handleDeleteWatched={handleDeleteWatched}
+                />
               </>
             )}
           </>
